@@ -1,7 +1,10 @@
 package com.mohamedrejeb.cardsgame
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.EaseInOut
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -111,7 +114,11 @@ fun GameScreen() {
                         .then(
                             if (droppedCards.contains(card)) {
                                 Modifier
-                                    .zIndex(droppedCards.indexOf(card).toFloat())
+                                    .zIndex(
+                                        droppedCards
+                                            .indexOf(card)
+                                            .toFloat()
+                                    )
                             } else {
                                 Modifier
                                     .zIndex((droppedCards.size + index).toFloat())
@@ -170,6 +177,14 @@ fun CardItem(
         targetValue = if (isDropped) 0f else cardsSpreadDegree * (index - nonDroppedCardsSize / 2) - 30f,
         label = "Card ${card.id} rotation animation"
     )
+    val cardDropRotation = animateFloatAsState(
+        targetValue = if (isDropped) 160f else 0f,
+        label = "Card ${card.id} drop rotation animation",
+        animationSpec = tween(
+            durationMillis = 400,
+            easing = EaseInOut,
+        )
+    )
     val cardDragX = remember {
         Animatable(initialValue = 0f,)
     }
@@ -177,9 +192,6 @@ fun CardItem(
         Animatable(initialValue = 0f,)
     }
     val cardOriginalOffset = remember {
-        mutableStateOf(Offset.Zero)
-    }
-    val cardOffset = remember {
         mutableStateOf(Offset.Zero)
     }
 
@@ -203,6 +215,10 @@ fun CardItem(
                 translationX = cardDragX.value
                 translationY = activeCardOffset.value + cardDragY.value
             }
+            .graphicsLayer {
+                this.transformOrigin = TransformOrigin.Center
+                rotationZ = cardDropRotation.value
+            }
             .clip(MaterialTheme.shapes.small)
             .pointerInput(activeCard) {
                 detectTapGestures(
@@ -221,7 +237,6 @@ fun CardItem(
                             onDragStart = { startOffset ->
                                 println("startOffset: $startOffset")
                                 isBeingDragged.value = true
-                                cardOffset.value = cardOriginalOffset.value
                                 setActiveCard(card)
                             },
                             onDragEnd = {
@@ -246,10 +261,22 @@ fun CardItem(
                                     val remainingOffset = targetOffset - cardOriginalOffset.value
                                     println("remainingOffset: $remainingOffset")
                                     scope.launch {
-                                        cardDragX.animateTo(remainingOffset.x)
+                                        cardDragX.animateTo(
+                                            targetValue = remainingOffset.x,
+                                            animationSpec = tween(
+                                                durationMillis = 800,
+                                                easing = EaseInOut
+                                            )
+                                        )
                                     }
                                     scope.launch {
-                                        cardDragY.animateTo(remainingOffset.y)
+                                        cardDragY.animateTo(
+                                            targetValue = remainingOffset.y,
+                                            animationSpec = tween(
+                                                durationMillis = 800,
+                                                easing = EaseInOut
+                                            )
+                                        )
                                     }
                                     onCardDropped(card)
                                 } else {
@@ -276,7 +303,6 @@ fun CardItem(
                             onDrag = { change, dragAmount ->
                                 change.consume()
 
-                                cardOffset.value += dragAmount
                                 scope.launch {
                                     cardDragX.snapTo(cardDragX.value + dragAmount.x)
                                 }
