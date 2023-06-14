@@ -5,7 +5,7 @@ Sample card game app made using Jetpack Compose. Contains some complex animation
 
 ## Animation Preview
 
-https://github.com/MohamedRejeb/Card-Game-Animation/assets/41842296/d8d64508-62fa-4331-b26e-a1806397f065
+https://github.com/MohamedRejeb/Card-Game-Animation/assets/41842296/c16fa8f1-69c8-4cdd-9305-edc466e45bdb
 
 
 ## Acknowledgements
